@@ -1,4 +1,8 @@
 import bpy
+import types
+
+from . import variables as var
+
 
 class CHARANIM_UL_character_selector(bpy.types.UIList):
 
@@ -101,17 +105,18 @@ class CHARANIM_UL_character_selector(bpy.types.UIList):
         else:
             icon="RADIOBUT_OFF"
         row.label(text="", icon=icon)
-        if ob.type=="ARMATURE":
-            icon="ARMATURE_DATA"
+
+        if item.type == "ARMATURE":
+            icon = "ARMATURE_DATA"
         else:
-            icon="OBJECT_DATAMODE"
+            icon = "OBJECT_DATAMODE"
+
         row.label(
-            text=item.name,
-            icon=icon,
+            text = item.name,
+            icon = icon,
             )
         sub = row.row()
         sub.alignment = 'RIGHT'
-        sub.label(text=item.type.upper())
 
         # row = layout.row(align=True)
         # row.alignment = 'RIGHT'
@@ -126,145 +131,94 @@ class CHARANIM_UL_character_selector(bpy.types.UIList):
             #row.separator()
             # Isolate
             if item.isolated:
-                icon = "PINNED"
+                icon = var.iso_icon
             else:
-                icon = "UNPINNED"
+                icon = var.no_iso_icon
             op = col1.operator("charanim.isolate_character", text="", icon=icon, emboss=False)
-            op.char_index = index
+            op.char_name = item.name
 
             #row.separator()
             col2.prop(item.collection, "hide_select", text="", emboss=False)
             col3.prop(item.collection, "hide_viewport", text="", emboss=False)
-            #row.prop(item.collection, "hide_render", text="", emboss=False)
+            col4.prop(item.collection, "hide_render", text="", emboss=False)
 
-            op = col4.operator("charanim.rig_add_char_keyframes", text="", icon="DECORATE_KEYFRAME", emboss=False)
-            op.char_index = index
+            # op = col4.operator("charanim.rig_add_char_keyframes", text="", icon="DECORATE_KEYFRAME", emboss=False) # TODO
+            # op.char_index = index # TODO
 
 
 def draw_scene_switcher(scene, container):
     sub=container.row()
-    if scene.name=="_anim_temp":
+    if scene.name==var.anim_scn_name:
         sub.alert = True
-        icon = "PINNED"
+        icon = var.iso_icon
     else:
-        icon = "UNPINNED"
-    sub.operator("charanim.change_scene", text="", icon=icon, emboss=False)
+        icon = var.no_iso_icon
+    sub.operator("charanim.toggle_scene", text="", icon=icon, emboss=False)
+
+
+def draw_rig_selector_header(context, layout):
+    row = layout.row(align=True)
+    row.label(text="Characters")
+    row.separator()
+    row.operator("charanim.refresh_character_list", icon='FILE_REFRESH', text="", emboss=False)
+    draw_scene_switcher(context.scene, row)
+
 
 def draw_rig_selector(context, layout):
     scn = context.scene
-    rig_props = context.window_manager.woolly_rig_properties
-    chars = rig_props.available_characters
+    props = context.window_manager.charanim_properties
 
     big_col = layout.column(align=True)
 
     # Isolated collection
-    anim_scn = scn.name!="_anim_temp"
+    anim_scn = scn.name != var.anim_scn_name
+
     box = big_col.box()
     row=box.row(align=True)
-    split = row.split(factor=0.7)
-    #split = row.split(factor=0.3)
-    bcol0 = split.column()
-    bcol1 = split.column()
-    row = bcol0.row(align=True)
-    sub = row.row(align=True)
-    sub.alignment="LEFT"
-    sub.operator(
-        "woolly.select_isocoll",
-        text=f"{str(rig_props.isocoll_count)} - IsoColl",
+    sub0 = row.row(align=True)
+    sub0.alignment="LEFT"
+    sub0.operator(
+        "charanim.select_isocoll_objects",
+        text=f"{str(props.isocoll_count)} - IsoColl",
         emboss=False,
         icon="OUTLINER_COLLECTION",
         )
 
-    sub0=row.row(align=True)
-    sub0.scale_x=0.8
-    sub0.alignment="RIGHT"
-    sub=sub0.row(align=True)
-    sub.enabled=anim_scn
-    sub.operator("woolly.manage_isolate_collection", text="", icon="ADD").behavior="ADD"
-    sub0.operator("woolly.manage_isolate_collection", text="", icon="REMOVE").behavior="REMOVE"
-    sub0.operator("woolly.manage_isolate_collection", text="", icon="X").behavior="DELETE"
+    sub1=row.row(align=True)
+    # sub0.scale_x=0.8
+    sub1.alignment="CENTER"
+    sub1b=sub1.row(align=True)
+    sub1b.enabled=anim_scn
+    sub1b.operator("charanim.manage_isolate_collection", text="", icon="ADD").behavior="ADD"
+    sub1.operator("charanim.manage_isolate_collection", text="", icon="REMOVE").behavior="REMOVE"
+    sub1.operator("charanim.manage_isolate_collection", text="", icon="X").behavior="DELETE"
 
-    split = bcol1.split()
-    col1 = split.column()
-    col2 = split.column()
-    col3 = split.column()
-    col4 = split.column()
+    sub2=row.row(align=True)
+    sub2.alignment="RIGHT"
 
-    # row.separator()
-    if rig_props.isocoll:
-        icon = "PINNED"
+    if props.isocoll:
+        icon = var.iso_icon
     else:
-        icon = "UNPINNED"
-    col1.operator("woolly.manage_isolate_collection", text="", icon=icon, emboss=False).behavior="LINK"
+        icon = var.no_iso_icon
+    sub2.operator("charanim.manage_isolate_collection", text="", icon=icon, emboss=False).behavior="LINK"
     try:
         coll = bpy.data.collections['_anim_temp']
     except KeyError:
         coll = None
     if coll is not None:
-        # row.separator()
-        col2.prop(coll, "hide_select", text="", emboss=False)
-        col3.prop(coll, "hide_viewport", text="", emboss=False)
-        #row.label(text="", icon="BLANK1")
+        sub2.prop(coll, "hide_select", text="", emboss=False)
+        sub2.prop(coll, "hide_viewport", text="", emboss=False)
 
     big_col.template_list(
-        "WOOLLY_UL_character_selector",
+        "CHARANIM_UL_character_selector",
         "",
-        rig_props,
+        props,
         "available_characters",
-        rig_props,
+        props,
         "character_index",
         rows = 3,
         )
 
-def draw_rig_selector_header(context, layout):
-    row = layout.row(align=True)
-    row.label(text="Personnages")
-    row.separator()
-    row.operator("woolly.available_character_update", icon='FILE_REFRESH', text="", emboss=False)
-    draw_scene_switcher(context.scene, row)
-    op=row.operator("woolly.character_list_select", text="", icon="RESTRICT_SELECT_OFF", emboss=False)
-    op.char_index=-1
-
-class WOOLLY_PT_rig_selector_viewport_panel(class_c.WOOLLY_anim_panels):
-    bl_label = ""
-
-    @classmethod
-    def poll(cls, context):
-        return get_addon_preferences().character_list_panel=="VIEWPORT"
-
-    def draw_header(self, context):
-        draw_rig_selector_header(context, self.layout)
-
-    def draw(self, context):
-        draw_rig_selector(context, self.layout)
-
-class WOOLLY_PT_rig_selector_properties_panel(class_c.WOOLLY_anim_properties_panels):
-    bl_label = ""
-
-    @classmethod
-    def poll(cls, context):
-        if not context.area.spaces[0].search_filter:
-            return get_addon_preferences().character_list_panel=="PROPERTIES"
-
-    def draw_header(self, context):
-        draw_rig_selector_header(context, self.layout)
-
-    def draw(self, context):
-        draw_rig_selector(context, self.layout)
-
-class WOOLLY_PT_rig_selector_popover(bpy.types.Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'HEADER'
-    bl_label = "Personnages"
-    bl_ui_units_x = 12
-
-    @classmethod
-    def poll(cls, context):
-        return get_addon_preferences().character_list_panel=="POPOVER"
-
-    def draw(self, context):
-        draw_rig_selector_header(context, self.layout)
-        draw_rig_selector(context, self.layout)
 
 def copy_func(f, name=None):
     fn = types.FunctionType(f.__code__, f.__globals__, name or f.__name__,
@@ -273,69 +227,64 @@ def copy_func(f, name=None):
     fn.__dict__.update(f.__dict__)
     return fn
 
+
 draw_xform_copy = copy_func(bpy.types.VIEW3D_HT_header.draw_xform_template)
 
-def ww_override_xform(layout, context):
+
+def charanim_override_xform(layout, context):
     draw_xform_copy(layout, context)
-    prefs = get_addon_preferences()
-    if prefs.animation_panel=="POPOVER":
-        layout.popover(panel="WOOLLY_PT_animation_utils_popover", text="", icon="ACTION")
-    if prefs.character_list_panel=="POPOVER":
-        layout.popover(panel="WOOLLY_PT_rig_selector_popover", text="", icon="MESH_MONKEY")
+    layout.popover(panel="CHARANIM_PT_rig_selector_popover", text="", icon="MESH_MONKEY")
 
-# anim topbar
-def ww_rig_topbar(self, context):
-    if context.region.alignment == 'RIGHT':
-        layout=self.layout
-        #layout.prop(context.window_manager.woolly_rig_properties, "profile_process", text="", icon='MONKEY')
-        draw_scene_switcher(context.scene, layout)
 
-class WOOLLY_OT_lock_rig_panel(bpy.types.Operator):
-    bl_idname = "woolly.lock_rig_panel"
-    bl_label = "Verouiller UI"
-    bl_description = "Verouiller UI du rig"
-    bl_options = {"INTERNAL"}
-
-    char_name : bpy.props.StringProperty()
+class CHARANIM_PT_rig_selector_popover(bpy.types.Panel):
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'HEADER'
+    bl_label = "Characters"
+    bl_ui_units_x = 12
 
     @classmethod
     def poll(cls, context):
-        return context.area.type=="PROPERTIES"
+        return True
 
-    def execute(self, context):
-        if not self.char_name:
-            self.report({'WARNING'}, "Unavailable rig panel")
-            return {'CANCELLED'}
+    def draw(self, context):
+        draw_rig_selector_header(context, self.layout)
+        draw_rig_selector(context, self.layout)
 
-        space = context.area.spaces[0]
-        if space.search_filter == self.char_name:
-            space.search_filter = ""
-            space.use_pin_id = False
-            msg = 'Panel unlocked'
-        else:
-            space.search_filter = self.char_name
-            space.use_pin_id = True
-            msg = f'{self.char_name} panel locked'
 
-        self.report({'INFO'}, msg)
-        return {'FINISHED'}
+class CHARANIM_PT_object_properties(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "object"
+    bl_label = "Charanim"
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def draw(self, context):
+        self.layout.prop(context.active_object, "charanim_collection", text="")
+
+
+# anim topbar
+def scene_rig_topbar(self, context):
+    if context.region.alignment == 'RIGHT':
+        layout=self.layout
+        draw_scene_switcher(context.scene, layout)
 
 
 ### REGISTER ---
 def register():
-    bpy.utils.register_class(WOOLLY_UL_character_selector)
-    bpy.utils.register_class(WOOLLY_PT_rig_selector_viewport_panel)
-    bpy.utils.register_class(WOOLLY_PT_rig_selector_properties_panel)
-    bpy.utils.register_class(WOOLLY_PT_rig_selector_popover)
-    bpy.types.VIEW3D_HT_header.draw_xform_template = ww_override_xform
-    bpy.types.TOPBAR_HT_upper_bar.prepend(ww_rig_topbar)
-    bpy.utils.register_class(WOOLLY_OT_lock_rig_panel)
+    bpy.utils.register_class(CHARANIM_UL_character_selector)
+    bpy.utils.register_class(CHARANIM_PT_rig_selector_popover)
+    bpy.utils.register_class(CHARANIM_PT_object_properties)
+
+    bpy.types.VIEW3D_HT_header.draw_xform_template = charanim_override_xform
+    bpy.types.TOPBAR_HT_upper_bar.prepend(scene_rig_topbar)
 
 def unregister():
-    bpy.utils.unregister_class(WOOLLY_UL_character_selector)
-    bpy.utils.unregister_class(WOOLLY_PT_rig_selector_viewport_panel)
-    bpy.utils.unregister_class(WOOLLY_PT_rig_selector_properties_panel)
-    bpy.utils.unregister_class(WOOLLY_PT_rig_selector_popover)
-    bpy.types.VIEW3D_HT_header.draw_xform_template = ww_override_xform
-    bpy.types.TOPBAR_HT_upper_bar.remove(ww_rig_topbar)
-    bpy.utils.unregister_class(WOOLLY_OT_lock_rig_panel)
+    bpy.utils.unregister_class(CHARANIM_UL_character_selector)
+    bpy.utils.unregister_class(CHARANIM_PT_rig_selector_popover)
+    bpy.utils.unregister_class(CHARANIM_PT_object_properties)
+
+    # bpy.types.VIEW3D_HT_header.draw_xform_template = charanim_override_xform
+    bpy.types.TOPBAR_HT_upper_bar.remove(scene_rig_topbar)

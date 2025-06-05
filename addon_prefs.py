@@ -9,7 +9,6 @@ class CHARANIM_PF_addon_prefs(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        
         layout.prop(self, "debug")
 
         

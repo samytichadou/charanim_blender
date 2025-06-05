@@ -25,12 +25,30 @@ Created by Samy Tichadou (tonton)
 from . import (
     addon_prefs,
     properties,
+    gui,
+    character_selection,
+    ot_refresh_character_list,
+    ot_toggle_scene,
+    ot_isolate_character,
+    ot_isolation_collection,
 )
 
 def register():
     addon_prefs.register()
     properties.register()
+    gui.register()
+    character_selection.register()
+    ot_refresh_character_list.register()
+    ot_toggle_scene.register()
+    ot_isolate_character.register()
+    ot_isolation_collection.register()
 
 def unregister():
     addon_prefs.unregister()
     properties.unregister()
+    gui.unregister()
+    character_selection.unregister()
+    ot_refresh_character_list.unregister()
+    ot_toggle_scene.unregister()
+    ot_isolate_character.unregister()
+    ot_isolation_collection.unregister()

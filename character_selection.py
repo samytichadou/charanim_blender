@@ -1,5 +1,7 @@
 import bpy
 
+_shift_event = False
+
 class CHARANIM_get_event(bpy.types.Operator):
     bl_idname  = "charanim.get_event"
     bl_label   = ""
@@ -10,27 +12,27 @@ class CHARANIM_get_event(bpy.types.Operator):
         _shift_event = event.shift
         return {'FINISHED'}
 
-def check_rig_in_scene(context, rig_object):
+def check_object_in_scene(context, object):
     try:
-        context.scene.objects[rig_object.name]
+        context.scene.objects[object.name]
         return True
     except (KeyError, AttributeError):
-        print(f"CHARANIM --- {rig_object.name} : No Rig available")
+        print(f"CHARANIM --- {object.name} : No Rig available")
         return False
 
-def select_single_object(context, rig_object):
+def select_single_object(context, object):
     for obj in context.selected_objects:
         obj.select_set(False)
-    context.view_layer.objects.active = rig_object
-    rig_object.select_set(True)
+    context.view_layer.objects.active = object
+    object.select_set(True)
 
-def add_object_to_selection(context, rig_object):
-    context.view_layer.objects.active = rig_object
-    rig_object.select_set(True)
+def add_object_to_selection(context, object):
+    context.view_layer.objects.active = object
+    object.select_set(True)
 
-def remove_object_from_selection(context, rig_object):
-    rig_object.select_set(False)
-    if context.view_layer.objects.active == rig_object:
+def remove_object_from_selection(context, object):
+    object.select_set(False)
+    if context.view_layer.objects.active == object:
         if context.selected_objects:
             context.view_layer.objects.active = context.selected_objects[0]
         else:
@@ -49,8 +51,6 @@ def get_back_to_pose_mode(context):
             return True
     return False
 
-_shift_event = False
-
 def get_char_index(self):
     return self.get("character_index", 0)
 
@@ -62,7 +62,7 @@ def set_char_index(self, value):
     context = bpy.context
     rig_object = self.available_characters[value].rig
 
-    if not check_rig_in_scene(bpy.context, rig_object):
+    if not check_object_in_scene(bpy.context, rig_object):
         self.prevent_update = True
         return
 
@@ -116,7 +116,7 @@ def char_index_callback(self, context):
 
     # Get rig object
     rig_object = self.available_characters[self.character_index].rig
-    if not check_rig_in_scene(context, rig_object):
+    if not check_object_in_scene(context, rig_object):
         return
 
     # Select object
