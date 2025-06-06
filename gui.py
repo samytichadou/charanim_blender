@@ -125,6 +125,7 @@ class CHARANIM_UL_character_selector(bpy.types.UIList):
         col2 = split.column()
         col3 = split.column()
         col4 = split.column()
+        col5 = split.column()
 
 
         if item.collection:
@@ -142,8 +143,8 @@ class CHARANIM_UL_character_selector(bpy.types.UIList):
             col3.prop(item.collection, "hide_viewport", text="", emboss=False)
             col4.prop(item.collection, "hide_render", text="", emboss=False)
 
-            # op = col4.operator("charanim.rig_add_char_keyframes", text="", icon="DECORATE_KEYFRAME", emboss=False) # TODO
-            # op.char_index = index # TODO
+            op = col5.operator("charanim.keyframe_character", text="", icon="DECORATE_KEYFRAME", emboss=False)
+            op.char_name = item.name
 
 
 def draw_scene_switcher(scene, container):
@@ -233,14 +234,14 @@ draw_xform_copy = copy_func(bpy.types.VIEW3D_HT_header.draw_xform_template)
 
 def charanim_override_xform(layout, context):
     draw_xform_copy(layout, context)
-    layout.popover(panel="CHARANIM_PT_rig_selector_popover", text="", icon="MESH_MONKEY")
+    layout.popover(panel="CHARANIM_PT_character_selector_popover", text="", icon="MESH_MONKEY")
 
 
-class CHARANIM_PT_rig_selector_popover(bpy.types.Panel):
+class CHARANIM_PT_character_selector_popover(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'HEADER'
     bl_label = "Characters"
-    bl_ui_units_x = 12
+    bl_ui_units_x = 16
 
     @classmethod
     def poll(cls, context):
@@ -249,6 +250,26 @@ class CHARANIM_PT_rig_selector_popover(bpy.types.Panel):
     def draw(self, context):
         draw_rig_selector_header(context, self.layout)
         draw_rig_selector(context, self.layout)
+
+
+class CHARANIM_OT_character_selector_popup(bpy.types.Operator):
+    bl_idname = "anim.character_selector_popup"
+    bl_label = "Character Selector"
+    # bl_options = {"INTERNAL"}
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)#, width=400)
+
+    def draw(self, context):
+        draw_rig_selector_header(context, self.layout)
+        draw_rig_selector(context, self.layout)
+
+    def execute(self, context):
+        return {'FINISHED'}
 
 
 class CHARANIM_PT_object_properties(bpy.types.Panel):
@@ -275,7 +296,8 @@ def scene_rig_topbar(self, context):
 ### REGISTER ---
 def register():
     bpy.utils.register_class(CHARANIM_UL_character_selector)
-    bpy.utils.register_class(CHARANIM_PT_rig_selector_popover)
+    bpy.utils.register_class(CHARANIM_PT_character_selector_popover)
+    bpy.utils.register_class(CHARANIM_OT_character_selector_popup)
     bpy.utils.register_class(CHARANIM_PT_object_properties)
 
     bpy.types.VIEW3D_HT_header.draw_xform_template = charanim_override_xform
@@ -283,7 +305,8 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(CHARANIM_UL_character_selector)
-    bpy.utils.unregister_class(CHARANIM_PT_rig_selector_popover)
+    bpy.utils.unregister_class(CHARANIM_PT_character_selector_popover)
+    bpy.utils.unregister_class(CHARANIM_OT_character_selector_popup)
     bpy.utils.unregister_class(CHARANIM_PT_object_properties)
 
     # bpy.types.VIEW3D_HT_header.draw_xform_template = charanim_override_xform

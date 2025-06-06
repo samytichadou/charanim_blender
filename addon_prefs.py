@@ -3,13 +3,14 @@ import bpy
 class CHARANIM_PF_addon_prefs(bpy.types.AddonPreferences):
     bl_idname = __package__
     
-    debug : bpy.props.BoolProperty(
-        name='Debug',
-        )
+    all_armatures : bpy.props.BoolProperty(
+        name='All Armatures',
+        description='Retrieve all available Armatures, not just the setup ones',
+    )
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "debug")
+        layout.prop(self, "all_armatures")
 
         
 # get addon preferences

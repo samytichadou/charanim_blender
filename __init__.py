@@ -31,6 +31,7 @@ from . import (
     ot_toggle_scene,
     ot_isolate_character,
     ot_isolation_collection,
+    ot_keyframe_character,
 )
 
 def register():
@@ -42,6 +43,7 @@ def register():
     ot_toggle_scene.register()
     ot_isolate_character.register()
     ot_isolation_collection.register()
+    ot_keyframe_character.register()
 
 def unregister():
     addon_prefs.unregister()
@@ -52,3 +54,4 @@ def unregister():
     ot_toggle_scene.unregister()
     ot_isolate_character.unregister()
     ot_isolation_collection.unregister()
+    ot_keyframe_character.unregister()

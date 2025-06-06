@@ -4,6 +4,7 @@ from . import variables as var
 
 def _link_camera(general_scn, anim_scn):
     if general_scn.camera:
+        anim_scn.camera = general_scn.camera
         anim_scn.collection.objects.link(general_scn.camera)
 
 # Deal with not only sound strips # TODO

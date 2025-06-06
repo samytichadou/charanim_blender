@@ -2,6 +2,7 @@ import bpy
 
 from bpy.app.handlers import persistent
 
+from .addon_prefs import get_addon_preferences
 
 def get_characters():
     context = bpy.context
@@ -10,6 +11,8 @@ def get_characters():
 
     # Clear collection
     props.available_characters.clear()
+
+    all_armatures = get_addon_preferences().all_armatures
 
     # Get available rigs
     # for ob in bpy.data.objects:
@@ -22,7 +25,7 @@ def get_characters():
             continue
 
         if ob.charanim_collection\
-        or ob.type == "ARMATURE":
+        or (ob.type == "ARMATURE" and all_armatures):
 
             new = props.available_characters.add()
             new.name = ob.name
@@ -34,23 +37,29 @@ def get_characters():
                 new.type = "OBJECT"
 
             if ob.charanim_collection:
-                new.collection = ob.charanim_collection
+                try:
+                    coll = bpy.data.collections[ob.charanim_collection.name]
+                except KeyError:
+                    coll = ob.charanim_collection
+                new.collection = coll
                 continue
 
             # Get parent collection
             coll = None
 
             for c in context.scene.collection.children_recursive:
-                for obj in c.objects:
-                    if obj == ob:
-                        coll = c
-                        break
-            if coll is None:
-                for c in bpy.data.collections:
+                if not c.library:
                     for obj in c.objects:
                         if obj == ob:
                             coll = c
                             break
+            if coll is None:
+                for c in bpy.data.collections:
+                    if not c.library:
+                        for obj in c.objects:
+                            if obj == ob:
+                                coll = c
+                                break
 
             new.collection = coll
 
