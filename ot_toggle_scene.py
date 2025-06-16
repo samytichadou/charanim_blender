@@ -42,6 +42,21 @@ def _copy_sound_strips(scene_from, scene_to):
                 except AttributeError:
                     pass
 
+def _copy_scene_markers(scene_from, scene_to):
+
+    # Remove previous
+    for m in scene_to.timeline_markers:
+        scene_to.timeline_markers.remove(m)
+
+    # Copy scene markers
+    for m in scene_from.timeline_markers:
+        new = scene_to.timeline_markers.new(
+            m.name,
+            frame = m.frame,
+        )
+        new.camera = m.camera
+        new.select = m.select
+
 def _link_sound(scene_from, scene_to, remove_existing=True):
     # Remove sound strips from scene_to
     if remove_existing:
@@ -102,6 +117,7 @@ def _get_scenes():
         anim_scn = datas.scenes.new(name=var.anim_scn_name)
         _copy_scene_settings(general_scn, anim_scn)
         _copy_anim_settings(general_scn, anim_scn)
+        _copy_scene_markers(general_scn, anim_scn)
         # Set current frame
         anim_scn.frame_current = general_scn.frame_current
 
@@ -166,10 +182,12 @@ class CHARANIM_OT_toggle_scene(bpy.types.Operator):
         if context.scene != anim_scn:
             props.previous_scene = context.scene
             _copy_anim_settings(general_scn, anim_scn)
+            _copy_scene_markers(general_scn, anim_scn)
             _switch_to_scene(anim_scn)
 
         else:
             _copy_anim_settings(anim_scn, general_scn)
+            _copy_scene_markers(general_scn, anim_scn)
             _switch_to_scene(general_scn)
             props.previous_scene = None
 
