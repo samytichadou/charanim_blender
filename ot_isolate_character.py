@@ -45,7 +45,7 @@ class CHARANIM_OT_isolate_character(bpy.types.Operator):
 
         # Check if coll exists
         chk_exist = False
-        for coll in anim_scn.collection.children_recursive:
+        for coll in anim_scn.collection.children:
             if coll==char_coll:
                 chk_exist = True
                 break
